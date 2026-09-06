@@ -12,14 +12,20 @@ PLAYER_HEIGHT = 50
 PLAYER_VEL = 5
 STAR_WIDTH = 10
 STAR_HEIGHT = 20
+STAR_VEL = 3
 FONT = pygame.font.SysFont("comicsans", 30)
 
-def draw(player, elapsed_time):
+def draw(player, elapsed_time, stars):
     WIN.blit(BG, (0, 0))
     time_text = FONT.render(f"Time: {round(elapsed_time)}s", 1, "white")
     WIN.blit(time_text, (10, 10))
     pygame.draw.rect(WIN, 'red', player)
+
+    for star in stars:
+        pygame.draw.rect(WIN, 'white', star)
+
     pygame.display.update()
+
 
 def main():
     run = True
@@ -31,6 +37,7 @@ def main():
     star_count = 0
 
     stars = []
+    hit = False
 
     while run:
         star_count += clock.tick(60)
@@ -53,10 +60,26 @@ def main():
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and player.x - PLAYER_VEL >= 0:
             player.x -= PLAYER_VEL
-        if keys[pygame.K_RIGHT] and player.x + PLAYER_VEL + PLAYER_WIDTH <= WIDTH:
+        if keys[pygame.K_RIGHT] and player.x + PLAYER_VEL + player.width <= WIDTH:
             player.x += PLAYER_VEL
 
-        draw(player, elapsed_time)
+        for star in stars[:]:
+            star.y += STAR_VEL      
+            if star.y > HEIGHT:
+                stars.remove(star)
+            elif star.y + star.height >= player.y and star.colliderect(player):
+                stars.remove(star)
+                hit = True
+                break
+
+        if hit:
+            lost_text = FONT.render("You lost!", 1, 'white')
+            WIN.blit(lost_text, (WIDTH/2 - lost_text.get_width()/2, HEIGHT/2 - lost_text.get_height()/2))
+            pygame.display.update()
+            pygame.time.delay(4000)
+            break
+
+        draw(player, elapsed_time, stars)
 
     pygame.quit()
 
